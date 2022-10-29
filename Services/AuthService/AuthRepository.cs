@@ -1,16 +1,21 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using dotnet_rpg.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace dotnet_rpg.Services.AuthService
 {
   public class AuthRepository : IAuthRepository
   {
     private readonly DataContext _context;
+    private readonly IConfiguration _config;
     private readonly string BadCredentials = "The username and password combination is invalid.";
 
-    public AuthRepository(DataContext context)
+    public AuthRepository(DataContext context, IConfiguration config)
     {
       _context = context;
+      _config = config;
     }
 
 
@@ -21,7 +26,7 @@ namespace dotnet_rpg.Services.AuthService
       if (user == null) { return BadCredentials; }
 
       return VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt) ?
-        $"User {user.Id} is authenticated." : BadCredentials;
+        CreateToken(user) : BadCredentials;
     }
 
     public async Task<int> Register(User user, string password)
@@ -57,6 +62,32 @@ namespace dotnet_rpg.Services.AuthService
         var computeHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
         return computeHash.SequenceEqual(passwordHash);
       }
+    }
+
+    private string CreateToken(User user)
+    {
+      string appKey = _config.GetSection("AppSettings:Token").Value;
+
+      List<Claim> claims = new List<Claim> {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Name, user.Username)
+      };
+
+      SymmetricSecurityKey key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(appKey));
+
+      SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+      SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
+      {
+        Subject = new ClaimsIdentity(claims),
+        Expires = DateTime.Now.AddDays(1),
+        SigningCredentials = creds
+      };
+
+      JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+      SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+
+      return tokenHandler.WriteToken(token);
     }
   }
 }
