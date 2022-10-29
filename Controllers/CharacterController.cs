@@ -48,11 +48,12 @@ namespace dotnet_rpg.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<List<AddCharacterDto>>> AddCharacter([FromBody] Character character)
+        public async Task<ActionResult<List<AddCharacterDto>>> AddCharacter([FromBody] AddCharacterDto character)
         {
             try
             {
-                return Ok(await _service.AddCharacter(character));
+                await _service.AddCharacter(character);
+                return Ok(await _service.GetAllCharacters());
             }
             catch (System.Exception)
             {
@@ -61,9 +62,11 @@ namespace dotnet_rpg.Controllers
 
         }
 
-        [HttpPut]
-        public async Task<ActionResult<GetCharacterDto>> UpdateCharacter([FromBody] UpdateCharacterDto updatedCharacter)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<GetCharacterDto>> UpdateCharacter(int id, [FromBody] UpdateCharacterDto updatedCharacter)
         {
+            if (id != updatedCharacter.Id) { return BadRequest(); }
+
             try
             {
                 return Ok(await _service.UpdateCharacter(updatedCharacter));
