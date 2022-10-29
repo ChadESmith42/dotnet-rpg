@@ -5,9 +5,14 @@ namespace dotnet_rpg.Models
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum RpgClass
     {
-        Knight = 1,
-        Mage = 2,
-        Cleric = 3
-
+        Pirate = 1,
+        SwordMaster = 2,
+        Giant = 3,
+        Brainiac = 4,
+        Soldier = 5,
+        Thief = 6,
+        Huntsman = 7,
+        Farmboy = 8,
+        Wizard = 9
     }
 }

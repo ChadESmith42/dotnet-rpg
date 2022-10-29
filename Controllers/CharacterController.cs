@@ -93,5 +93,15 @@ namespace dotnet_rpg.Controllers
                 return StatusCode(500);
             }
         }
+
+        [HttpPost("Skill")]
+        public async Task<ActionResult<GetCharacterDto>> AddCharacterSkill(AddCharacterSkillDto newSkill)
+        {
+            var response = await _service.AddCharacterSkill(newSkill);
+            if (response != null) {
+                return Ok(response);
+            }
+            return NotFound();
+        }
     }
 }
