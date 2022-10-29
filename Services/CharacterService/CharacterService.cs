@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
 using dotnet_rpg.Data;
@@ -13,15 +14,20 @@ namespace dotnet_rpg.Services.CharacterService
   {
     private readonly IMapper _mapper;
     private readonly DataContext _context;
-    public CharacterService(IMapper mapper, DataContext context)
+    private readonly IHttpContextAccessor _httpContext;
+    public CharacterService(IMapper mapper, DataContext context, IHttpContextAccessor httpContext)
     {
       _mapper = mapper;
       _context = context;
+      _httpContext = httpContext;
     }
+
+    private int GetUserId() => int.Parse(_httpContext.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 
     public async Task<Boolean> AddCharacter(AddCharacterDto character)
     {
       Character newCharacter = _mapper.Map<Character>(character);
+      newCharacter.User = await _context.Users.FirstOrDefaultAsync(u => u.Id == GetUserId());
       _context.Characters.Add(newCharacter);
       await _context.SaveChangesAsync();
       return true;
@@ -29,7 +35,10 @@ namespace dotnet_rpg.Services.CharacterService
 
     public async Task<List<GetCharacterDto>> DeleteCharacter(int Id)
     {
-      Character character = _context.Characters.First(c => c.Id == Id);
+      Character character = _context.Characters.First(c => c.Id == Id && c.User.Id == GetUserId());
+
+      if (character == null) { return null; }
+
       _context.Characters.Remove(character);
       await _context.SaveChangesAsync();
       var response = _context.Characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
@@ -38,15 +47,17 @@ namespace dotnet_rpg.Services.CharacterService
 
     public async Task<List<GetCharacterDto>> GetAllCharacters()
     {
-      var characters = await _context.Characters.ToListAsync();
+      var characters = await _context.Characters.Where(c => c.User.Id == GetUserId()).ToListAsync();
       var response = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
       return response;
     }
 
     public async Task<GetCharacterDto> GetCharacterById(int id)
     {
-      var character = await _context.Characters.FindAsync(id);
+      var character = await _context.Characters.FirstOrDefaultAsync(c => c.Id == id && c.User.Id == GetUserId());
+
       if (character == null) { throw new Exception("Character not found."); }
+
       return _mapper.Map<GetCharacterDto>(character);
     }
 
@@ -55,7 +66,8 @@ namespace dotnet_rpg.Services.CharacterService
 
       try
       {
-        var character = await _context.Characters.FirstOrDefaultAsync(c => c.Id == updatedCharacter.Id);
+        var character = await _context.Characters.FirstOrDefaultAsync(c => c.Id == updatedCharacter.Id && c.User.Id == GetUserId());
+
         character.Name = updatedCharacter.Name;
         character.HitPoints = updatedCharacter.HitPoints;
         character.Strength = updatedCharacter.Strength;

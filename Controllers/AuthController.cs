@@ -1,10 +1,12 @@
 using dotnet_rpg.DTOs.User;
 using dotnet_rpg.Services.AuthService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace dotnet_rpg.Controllers
 {
   [ApiController]
+  [AllowAnonymous]
   [Route("[controller]")]
   [Produces("application/json")]
   public class AuthController : ControllerBase
@@ -28,10 +30,10 @@ namespace dotnet_rpg.Controllers
     [HttpPost("login")]
     public async Task<ActionResult<int>> Login([FromBody] UserLoginDto request)
     {
-      var response = await _authRepo.Login(
+      var token = await _authRepo.Login(
           request.Username, request.Password
       );
-      return response == "The username and password combination is invalid." ? NotFound() : Ok(response);
+      return token == "The username and password combination is invalid." ? NotFound() : Ok(token);
     }
   }
 }

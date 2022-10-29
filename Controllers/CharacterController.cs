@@ -7,6 +7,7 @@ using dotnet_rpg.Models;
 using dotnet_rpg.Services.CharacterService;
 using dotnet_rpg.DTOs.Character;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace dotnet_rpg.Controllers
 {
@@ -24,6 +25,7 @@ namespace dotnet_rpg.Controllers
         [HttpGet("GetAll")]
         public async Task<ActionResult<List<GetCharacterDto>>> Get()
         {
+
             try
             {
                 return Ok(await _service.GetAllCharacters());
