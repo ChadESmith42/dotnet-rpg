@@ -12,7 +12,7 @@ namespace dotnet_rpg.Models
         public string Description { get; set; } = "A wily character, small but fierce.";
         public int ClassLevel { get; set; } = 1;
         public User? User { get; set; }
-        public Weapon Weapon { get; set; }
+        public Inventory Inventory { get; set; }
         public List<Skill> Skills { get; set; }
         public int Fights { get; set; }
         public int Victories { get; set; }

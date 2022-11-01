@@ -33,7 +33,7 @@ namespace dotnet_rpg.Controllers
       var token = await _authRepo.Login(
           request.Username, request.Password
       );
-      return token == "The username and password combination is invalid." ? NotFound() : Ok(token);
+      return token.Token == "The username and password combination is invalid." ? NotFound() : Ok(token);
     }
   }
 }

@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using dotnet_rpg.Data;
+using dotnet_rpg.DTOs.User;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -19,14 +20,19 @@ namespace dotnet_rpg.Services.AuthService
     }
 
 
-    public async Task<string> Login(string username, string password)
+    public async Task<AuthToken> Login(string username, string password)
     {
+      AuthToken token = new AuthToken();
       var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
-      if (user == null) { return BadCredentials; }
+      if (user == null) { return token; }
 
-      return VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt) ?
-        CreateToken(user) : BadCredentials;
+      if (VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt)) {
+        token.Token = CreateToken(user);
+      } else {
+        token.Token = BadCredentials;
+      }
+      return token;
     }
 
     public async Task<int> Register(User user, string password)

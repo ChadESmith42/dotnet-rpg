@@ -13,9 +13,7 @@ namespace dotnet_rpg.Models
     public int Damage { get; set; } = 10;
     public int Durability { get; set; } = 10;
     public bool Repairable { get; set; } = true;
-    public int CharacterId { get; set; }
-    public Character Character { get; set; }
+    public int Value { get; set; }
+    public bool IsActive { get; set; }
   }
-
-
 }

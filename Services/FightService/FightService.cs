@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AutoMapper;
 using dotnet_rpg.Data;
 using dotnet_rpg.DTOs.Fight;
@@ -29,7 +25,7 @@ namespace dotnet_rpg.Services.FightService
       try
       {
         var characters = await _context.Characters
-            .Include(c => c.Weapon)
+            .Include(c => c.Inventory)
             .Include(c => c.Skills)
             .Where(c => challenge.CharacterIds.Contains(c.Id)).ToListAsync();
 
@@ -42,9 +38,10 @@ namespace dotnet_rpg.Services.FightService
                 var defender = defenders[new Random().Next(defenders.Count)];
                 int damage = 0;
                 string attackUsed = string.Empty;
+                Weapon weapon = attacker.Inventory.Weapons.FirstOrDefault(w => w.IsActive == true);
                 bool useWeapon = new Random().Next(2) == 0;
                 if (useWeapon) {
-                    attackUsed = attacker.Weapon.Name;
+                    attackUsed = weapon.Name;
                     damage = CalculateWeaponDamage(attacker, defender);
                 } else {
                     var skill = attacker.Skills[new Random().Next(attacker.Skills.Count)];
@@ -128,10 +125,10 @@ namespace dotnet_rpg.Services.FightService
         try
       {
         var attacker = await _context.Characters
-            .Include(c => c.Weapon)
+            .Include(c => c.Inventory)
             .FirstOrDefaultAsync(c => c.Id == attack.AttackerId);
         var defender = await _context.Characters
-            .Include(c => c.Weapon)
+            .Include(c => c.Inventory)
             .FirstOrDefaultAsync(c => c.Id == attack.DefenderId);
 
         int damage = CalculateWeaponDamage(attacker, defender);
@@ -159,7 +156,8 @@ namespace dotnet_rpg.Services.FightService
 
     private static int CalculateWeaponDamage(Character? attacker, Character? defender)
     {
-      int damage = attacker.Weapon.Damage + (new Random().Next(attacker.Strength));
+      Weapon attackerWeapon = attacker.Inventory.Weapons.FirstOrDefault(w => w.IsActive == true);
+      int damage = attackerWeapon.Damage + (new Random().Next(attacker.Strength));
       damage -= new Random().Next(defender.Defense);
       if (damage > 0) { defender.HitPoints -= damage; }
 
